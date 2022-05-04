@@ -38,11 +38,27 @@ class AuthController extends Controller
     }
 
     public function login(Request $request) {
+        $validator = Validator::make($request->all(),[
+            'login_info' => 'required',
+            'password' => 'required'
+        ])->stopOnFirstFailure(true);
         
-        if(!Auth::attempt($request->only('email', 'password')))
-            return response()->json(['message' => 'Unauthorized'],401);
+        // validate error
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 400);
+        }
+
+        $user = User::where('email', '=', $request->login_info)
+                    ->orWhere('phone', '=', $request->login_info)
+                    ->first();
         
-        $user = User::where('email', $request->email)->firstOrFail();
+        if(! $user)
+            return response()->json(['msg' => 'User does not exist'],401);
+        
+        if (! Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Incorrect Password'], 401);
+        }
+       
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json(['message' => 'Hi ' . $user->name . ', welcome to home', 'access_token' => $token, 'token_type' => 'Bearer',]);

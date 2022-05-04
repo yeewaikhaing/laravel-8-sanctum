@@ -17,7 +17,15 @@ class CreateProductsTable extends Migration
             $table->id();
             $table->string('name');
             $table->text('detail');
+            $table->string('created_by')
+                    ->nullable();
             $table->timestamps();
+
+            $table->foreign('created_by')
+                        ->references('user_id')
+                        ->on('users')
+                        ->cascadeOnUpdate()
+                        ->nullOnDelete();
         });
     }
 

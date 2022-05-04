@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Validator;
 use App\Models\Product;
+use App\Traits\Login;
 
 class ProductController extends Controller
 {
+    use Login;
     /**
      * Display a listing of the resource.
      *
@@ -37,6 +39,8 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        $login_user = $this->findUserByToken($request->bearerToken());
+
         $validator = Validator::make($request->all(),[
             'name' => 'required',
             'detail' => 'required'
@@ -49,7 +53,7 @@ class ProductController extends Controller
         $product = new Product();
         $product->name = $request->name;
         $product->detail = $request->detail;
-
+        $product->created_by = $login_user->user_id;
         $product->save();
 
         return response()->json(['message' => 'success', 'data' => $product], );
